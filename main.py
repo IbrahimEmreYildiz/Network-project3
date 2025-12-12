@@ -146,3 +146,101 @@ def file_transfer():
             print("İndirme işlemi tamam.")
         except Exception as e:
             print(f"Bir aksilik oldu: {e}")
+        finally:
+            s.close()
+
+
+def web_crawler():
+    url = input("Hangi sitenin linklerini çekelim (http:// ile başla): ")
+    try:
+        # Sayfaya istek atıp içeriğini alıyorum.
+        resp = requests.get(url, timeout=5)
+        # HTML kodlarını parçalamak için bu kütüphaneyi kullandım.
+        soup = BeautifulSoup(resp.text, 'html.parser')
+        print(f"\n {url} içindeki linkler şöyle:")
+        for link in soup.find_all('a'):
+            href = link.get('href')
+            # Sadece http ile başlayan gerçek linkleri gösteriyorum.
+            if href and href.startswith('http'):
+                print(href)
+    except Exception as e:
+        print(f"Hata çıktı: {e}")
+
+
+def wiki_fetcher():
+    topic = input("Wikipedia'da ne arayalım: ")
+    try:
+        # Wikipedia'nın hazır API'sine bağlanıp özet çekiyorum.
+        resp = requests.get(f"https://en.wikipedia.org/api/rest_v1/page/summary/{topic}")
+        if resp.status_code == 200:
+            data = resp.json()
+            print("\n ÖZET BİLGİ ")
+            print(data.get('extract', 'Özet bulamadım.'))
+        else:
+            print("Aradığın şey yok galiba.")
+    except Exception as e:
+        print(f"Bağlantı hatası var: {e}")
+
+
+def send_broadcast_msg():
+    msg = input("Herkese ne söylemek istersin: ")
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    # Broadcast izni vermezsem göndermiyor, o yüzden bunu açtım.
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    s.sendto(msg.encode(), (BROADCAST_IP, BROADCAST_PORT))
+    print("Mesajı herkese yaydım.")
+
+
+def start_game_client():
+    print("\n OYUN İSTEMCİSİ AÇILIYOR ")
+    print("Unutma önce server.py dosyasını çalıştırman lazım yoksa bağlanmaz.")
+    # İşletim sistemine göre doğru komutu veriyorum.
+    cmd = 'python client.py' if os.name == 'nt' else 'python3 client.py'
+    os.system(cmd)
+
+
+# ANA MENÜ KISMI
+def main():
+    # Program başlar başlamaz arka planda dinleyiciyi başlatıyorum ki mesajları kaçırmayalım.
+    t = threading.Thread(target=broadcast_listener_thread, daemon=True)
+    t.start()
+
+    while True:
+        print("\n NETWORK PROJECT ANA MENÜ ")
+        print(" PART A ARAÇLAR ")
+        print("1. Port Scanner")
+        print("2. Network Device Scanner")
+        print("3. File Transfer")
+        print("4. Web Crawler")
+        print("5. Wikipedia Fetcher")
+        print("6. Broadcast Mesaj Gönder")
+        print(" PART B OYUN ")
+        print("7. Tic-Tac-Toe Oyna (Client Başlat)")
+        print("8. Çıkış")
+
+        c = input("Seçiminiz: ")
+
+        # Seçime göre ilgili fonksiyonu çağırıyorum.
+        if c == '1':
+            port_scanner()
+        elif c == '2':
+            device_scanner()
+        elif c == '3':
+            file_transfer()
+        elif c == '4':
+            web_crawler()
+        elif c == '5':
+            wiki_fetcher()
+        elif c == '6':
+            send_broadcast_msg()
+        elif c == '7':
+            start_game_client()
+        elif c == '8':
+            sys.exit()
+        else:
+            print("Yanlış tuşladın galiba.")
+
+
+# --- İŞTE BU KISIM EKSİK OLDUĞU İÇİN ÇALIŞMIYORDU ---
+if __name__ == "__main__":
+    main()
