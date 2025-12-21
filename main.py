@@ -255,6 +255,6 @@ def main():
             print("Yanlış tuşladın galiba.")
 
 
-# --- İŞTE BU KISIM EKSİK OLDUĞU İÇİN ÇALIŞMIYORDU ---
+
 if __name__ == "__main__":
     main()
